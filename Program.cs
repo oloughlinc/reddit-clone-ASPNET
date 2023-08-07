@@ -1,11 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Npgsql.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 using RedditCloneASP.Models;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -25,6 +24,12 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+}
+
+// Seed database.. 
+using (var scope = app.Services.CreateScope()) {
+    var services = scope.ServiceProvider;
+    SeedData.Initialize(services);
 }
 
 app.UseHttpsRedirection();

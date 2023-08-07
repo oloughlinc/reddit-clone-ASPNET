@@ -16,14 +16,14 @@ namespace RedditCloneASP.Migrations
                 name: "Comments",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
+                    Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Title = table.Column<string>(type: "text", nullable: true),
+                    Poster = table.Column<string>(type: "text", nullable: true),
                     Body = table.Column<string>(type: "text", nullable: true),
                     PostId = table.Column<long>(type: "bigint", nullable: false),
                     ParentId = table.Column<long>(type: "bigint", nullable: false),
                     Depth = table.Column<long>(type: "bigint", nullable: false),
-                    PostDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    PostDate = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     Upsends = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>

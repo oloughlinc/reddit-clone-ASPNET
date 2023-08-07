@@ -12,7 +12,7 @@ using RedditCloneASP.Models;
 namespace RedditCloneASP.Migrations
 {
     [DbContext(typeof(CommentContext))]
-    [Migration("20230806213651_InitialCreate")]
+    [Migration("20230807225510_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -27,11 +27,11 @@ namespace RedditCloneASP.Migrations
 
             modelBuilder.Entity("RedditCloneASP.Models.Comment", b =>
                 {
-                    b.Property<long>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Body")
                         .HasColumnType("text");
@@ -42,13 +42,13 @@ namespace RedditCloneASP.Migrations
                     b.Property<long>("ParentId")
                         .HasColumnType("bigint");
 
-                    b.Property<DateTime>("PostDate")
+                    b.Property<DateTimeOffset>("PostDate")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<long>("PostId")
                         .HasColumnType("bigint");
 
-                    b.Property<string>("Title")
+                    b.Property<string>("Poster")
                         .HasColumnType("text");
 
                     b.Property<long>("Upsends")
