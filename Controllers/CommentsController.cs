@@ -13,9 +13,9 @@ namespace RedditCloneASP.Controllers
     [ApiController]
     public class CommentsController : ControllerBase
     {
-        private readonly CommentContext _context;
+        private readonly RedditContext _context;
 
-        public CommentsController(CommentContext context)
+        public CommentsController(RedditContext context)
         {
             _context = context;
         }
@@ -28,7 +28,36 @@ namespace RedditCloneASP.Controllers
           {
               return NotFound();
           }
-            return await _context.Comments.ToListAsync();
+
+          /* This query takes advantage of postgres recursive searching. It builds a temporary table by first 
+            performing the base query, followed by recursively performing the UNION query and joining the wanted values
+            into the new table until null is returned.
+
+            The resulting temporary table can be queried as needed. This is known as a CTE (common table expression)
+
+            The reason we do this is because our comment structure contains nested data, and by using this method we can selectively
+            return only certain branches as needed. These recursive searches are fairly optimized in postgres and offer a good balance of
+            simplicity vs speed for our needs.
+            */
+          FormattableString query = $"""  
+                WITH RECURSIVE "comment_tree" AS (
+
+                    SELECT *
+                    FROM "Comments"
+                    WHERE "ParentId" = 0 AND "Depth" <= 3
+                    
+                    UNION
+                    
+                        SELECT "c".*
+                        FROM "Comments" "c" 
+                        INNER JOIN "comment_tree" "ct"
+                            ON "ct"."Id" = "c"."ParentId"
+
+            ) SELECT * FROM "comment_tree";
+            """;
+
+            //return await _context.Comments.ToListAsync();
+            return await _context.Comments.FromSql(query).ToListAsync();
         }
 
         // GET: api/Comments/5
@@ -87,7 +116,7 @@ namespace RedditCloneASP.Controllers
         {
           if (_context.Comments == null)
           {
-              return Problem("Entity set 'CommentContext.Comments'  is null.");
+              return Problem("Entity set 'RedditContext.Comments'  is null.");
           }
             _context.Comments.Add(comment);
             await _context.SaveChangesAsync();

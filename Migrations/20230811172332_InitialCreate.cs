@@ -30,6 +30,25 @@ namespace RedditCloneASP.Migrations
                 {
                     table.PrimaryKey("PK_Comments", x => x.Id);
                 });
+
+            migrationBuilder.CreateTable(
+                name: "Posts",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Title = table.Column<string>(type: "text", nullable: true),
+                    Body = table.Column<string>(type: "text", nullable: true),
+                    Sub = table.Column<string>(type: "text", nullable: true),
+                    Link = table.Column<string>(type: "text", nullable: true),
+                    Poster = table.Column<string>(type: "text", nullable: true),
+                    PostDate = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    Upsends = table.Column<long>(type: "bigint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Posts", x => x.Id);
+                });
         }
 
         /// <inheritdoc />
@@ -37,6 +56,9 @@ namespace RedditCloneASP.Migrations
         {
             migrationBuilder.DropTable(
                 name: "Comments");
+
+            migrationBuilder.DropTable(
+                name: "Posts");
         }
     }
 }

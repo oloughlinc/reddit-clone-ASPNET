@@ -12,7 +12,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Use PostgreSQL through Entity Framework as native like service
-builder.Services.AddDbContext<CommentContext>( options => {
+builder.Services.AddDbContext<RedditContext>( options => {
     // https://www.npgsql.org/efcore/
     options.UseNpgsql(builder.Configuration.GetConnectionString("PostgresConnection"));
 });
@@ -29,7 +29,8 @@ if (app.Environment.IsDevelopment())
 // Seed database.. 
 using (var scope = app.Services.CreateScope()) {
     var services = scope.ServiceProvider;
-    SeedData.Initialize(services);
+    CommentSeed.Initialize(services);
+    PostSeed.Initialize(services);
 }
 
 app.UseHttpsRedirection();
