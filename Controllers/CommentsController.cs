@@ -20,13 +20,13 @@ namespace RedditCloneASP.Controllers
             _context = context;
         }
 
-        // GET: api/Comments
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Comment>>> GetComments()
+        // GET: api/comments
+        [HttpGet("{postId}")]
+        public async Task<ActionResult<IEnumerable<CommentDTO>>> GetComments(int postId)
         {
           if (_context.Comments == null)
           {
-              return NotFound();
+            return NotFound();
           }
 
           /* This query takes advantage of postgres recursive searching. It builds a temporary table by first 
@@ -44,7 +44,7 @@ namespace RedditCloneASP.Controllers
 
                     SELECT *
                     FROM "Comments"
-                    WHERE "ParentId" = 0 AND "Depth" <= 3
+                    WHERE "PostId" = {postId} AND "ParentId" = 0 AND "Depth" <= 3
                     
                     UNION
                     
@@ -53,29 +53,57 @@ namespace RedditCloneASP.Controllers
                         INNER JOIN "comment_tree" "ct"
                             ON "ct"."Id" = "c"."ParentId"
 
-            ) SELECT * FROM "comment_tree";
+            ) SELECT * FROM "comment_tree" ORDER BY "Depth" ASC;
             """;
 
-            //return await _context.Comments.ToListAsync();
-            return await _context.Comments.FromSql(query).ToListAsync();
-        }
+            // create new DTO that will hold the comment tree, it is a nested object
+            var comments_tree = new List<CommentDTO>();
 
-        // GET: api/Comments/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Comment>> GetComment(long id)
-        {
-          if (_context.Comments == null)
-          {
-              return NotFound();
-          }
-            var comment = await _context.Comments.FindAsync(id);
+            // query for a flat list of the requested data as a list of comment objects
+            var comments_flat = await _context.Comments.FromSql(query).ToListAsync();
 
-            if (comment == null)
-            {
-                return NotFound();
-            }
+            // get the initial depth of the root comment(s). The query is ordered by ascending depth so lowest depth always first index.
+            long inital_depth = comments_flat[0].Depth;
 
-            return comment;
+            // build the tree out to depth 4
+            comments_flat.ForEach(comment => {
+
+                switch (comment.Depth - inital_depth) {
+
+                    case 0: 
+                        comments_tree.Add(new CommentDTO(comment));
+                        break;
+
+                    case 1:
+                        comments_tree.Find(x => x.Comment.Id == comment.ParentId).Replies.Add(new CommentDTO(comment));
+                        break;
+
+                    case 2:
+                        comments_tree.ForEach(c => {
+                            var found = c.Replies.Find(x => x.Comment.Id == comment.ParentId);
+                            if (found != null) {
+                                found.Replies.Add(new CommentDTO(comment));
+                            };
+                        });
+                        break;
+
+                    case 3:
+                        comments_tree.ForEach(c1 => {
+                            c1.Replies.ForEach(c2 => {
+                                var found = c2.Replies.Find(x => x.Comment.Id == comment.ParentId);
+                                if (found != null) {
+                                found.Replies.Add(new CommentDTO(comment));
+                            };
+                            });
+                        });
+                        break;
+                }
+            });
+
+            // TODO: implement sorting functions
+
+            return comments_tree;
+
         }
 
         // PUT: api/Comments/5

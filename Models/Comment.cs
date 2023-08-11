@@ -1,4 +1,6 @@
+
 using System.Collections.Generic;
+
 
 namespace RedditCloneASP.Models;
 
@@ -19,4 +21,17 @@ public class Comment {
     public DateTimeOffset PostDate { get; set; }
 
     public long Upsends { get; set; }
+}
+
+public class CommentDTO {
+
+    public CommentDTO(Comment comment) {
+        Comment = comment;
+        Replies = new List<CommentDTO>();
+    }
+
+    public Comment Comment { get; set; }
+
+    public List<CommentDTO>? Replies { get; set; }
+
 }
