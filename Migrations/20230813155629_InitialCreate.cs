@@ -12,6 +12,9 @@ namespace RedditCloneASP.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.AlterDatabase()
+                .Annotation("Npgsql:PostgresExtension:ltree", ",,");
+
             migrationBuilder.CreateTable(
                 name: "Comments",
                 columns: table => new
@@ -21,7 +24,8 @@ namespace RedditCloneASP.Migrations
                     Poster = table.Column<string>(type: "text", nullable: true),
                     Body = table.Column<string>(type: "text", nullable: true),
                     PostId = table.Column<long>(type: "bigint", nullable: false),
-                    ParentId = table.Column<long>(type: "bigint", nullable: false),
+                    Path = table.Column<string>(type: "ltree", nullable: true),
+                    ParentPath = table.Column<string>(type: "text", nullable: true),
                     Depth = table.Column<long>(type: "bigint", nullable: false),
                     PostDate = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     Upsends = table.Column<long>(type: "bigint", nullable: false)

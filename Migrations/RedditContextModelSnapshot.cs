@@ -20,6 +20,7 @@ namespace RedditCloneASP.Migrations
                 .HasAnnotation("ProductVersion", "7.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
+            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "ltree");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("RedditCloneASP.Models.Comment", b =>
@@ -36,8 +37,11 @@ namespace RedditCloneASP.Migrations
                     b.Property<long>("Depth")
                         .HasColumnType("bigint");
 
-                    b.Property<long>("ParentId")
-                        .HasColumnType("bigint");
+                    b.Property<string>("ParentPath")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Path")
+                        .HasColumnType("ltree");
 
                     b.Property<DateTimeOffset>("PostDate")
                         .HasColumnType("timestamp with time zone");

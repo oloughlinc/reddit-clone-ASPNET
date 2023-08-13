@@ -29,81 +29,29 @@ namespace RedditCloneASP.Controllers
             return NotFound();
           }
 
-          /* This query takes advantage of postgres recursive searching. It builds a temporary table by first 
-            performing the base query, followed by recursively performing the UNION query and joining the wanted values
-            into the new table until null is returned.
-
-            The resulting temporary table can be queried as needed. This is known as a CTE (common table expression)
-
-            The reason we do this is because our comment structure contains nested data, and by using this method we can selectively
-            return only certain branches as needed. These recursive searches are fairly optimized in postgres and offer a good balance of
-            simplicity vs speed for our needs.
+            /* 
+                This query takes advantage of the postgres 'ltree' module, which includes efficient methods for
+                traversing branching data structures related by a character string 'path'. 'ltree' can efficiently
+                find all ancestor / children for a given path using a binary search on a path index. 
+                
+                see https://www.postgresql.org/docs/current/ltree.html
             */
-          FormattableString query = $"""  
-                WITH RECURSIVE "comment_tree" AS (
 
-                    SELECT *
-                    FROM "Comments"
-                    WHERE "PostId" = {postId} AND "ParentId" = 0 AND "Depth" <= 3
-                    
-                    UNION
-                    
-                        SELECT "c".*
-                        FROM "Comments" "c" 
-                        INNER JOIN "comment_tree" "ct"
-                            ON "ct"."Id" = "c"."ParentId"
-
-            ) SELECT * FROM "comment_tree" ORDER BY "Depth" ASC;
+            string pathId = postId.ToString();
+            FormattableString query = $"""  
+                SELECT *
+                FROM "Comments"
+                WHERE {pathId}::ltree @> "Path"
+                ORDER BY "Depth", "Id";
             """;
-
-            // create new DTO that will hold the comment tree, it is a nested object
-            var comments_tree = new List<CommentDTO>();
 
             // query for a flat list of the requested data as a list of comment objects
             var comments_flat = await _context.Comments.FromSql(query).ToListAsync();
 
-            // get the initial depth of the root comment(s). The query is ordered by ascending depth so lowest depth always first index.
-            long inital_depth = comments_flat[0].Depth;
-
-            // build the tree out to depth 4
-            comments_flat.ForEach(comment => {
-
-                switch (comment.Depth - inital_depth) {
-
-                    case 0: 
-                        comments_tree.Add(new CommentDTO(comment));
-                        break;
-
-                    case 1:
-                        comments_tree.Find(x => x.Comment.Id == comment.ParentId).Replies.Add(new CommentDTO(comment));
-                        break;
-
-                    case 2:
-                        comments_tree.ForEach(c => {
-                            var found = c.Replies.Find(x => x.Comment.Id == comment.ParentId);
-                            if (found != null) {
-                                found.Replies.Add(new CommentDTO(comment));
-                            };
-                        });
-                        break;
-
-                    case 3:
-                        comments_tree.ForEach(c1 => {
-                            c1.Replies.ForEach(c2 => {
-                                var found = c2.Replies.Find(x => x.Comment.Id == comment.ParentId);
-                                if (found != null) {
-                                found.Replies.Add(new CommentDTO(comment));
-                            };
-                            });
-                        });
-                        break;
-                }
+            // build and return a nested list
+            return await Task.Run<List<CommentDTO>>(() => {
+                return CommentDTO.BuildTreeFromComments(comments_flat);
             });
-
-            // TODO: implement sorting functions
-
-            return comments_tree;
-
         }
 
         // PUT: api/Comments/5
