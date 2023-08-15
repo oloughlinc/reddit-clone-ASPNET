@@ -5,7 +5,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+
 using RedditCloneASP.Models;
+using RedditCloneASP.Builders;
 
 namespace RedditCloneASP.Controllers
 {
@@ -50,8 +52,8 @@ namespace RedditCloneASP.Controllers
 
             // build and return a nested list
             return await Task.Run<List<CommentDTO>>(() => {
-                var comment_tree = CommentDTO.BuildTreeFromComments(comments_flat);
-                CommentDTO.Sort(comment_tree, CommentValues.Upsends);
+                var comment_tree = CommentsBuilder.BuildTreeFromComments(comments_flat);
+                CommentsBuilder.Sort(comment_tree, CommentValues.Upsends);
                 return comment_tree;
             });
         }
