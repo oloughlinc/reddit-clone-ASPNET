@@ -50,7 +50,9 @@ namespace RedditCloneASP.Controllers
 
             // build and return a nested list
             return await Task.Run<List<CommentDTO>>(() => {
-                return CommentDTO.BuildTreeFromComments(comments_flat);
+                var comment_tree = CommentDTO.BuildTreeFromComments(comments_flat);
+                CommentDTO.Sort(comment_tree, CommentValues.Upsends);
+                return comment_tree;
             });
         }
 
