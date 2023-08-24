@@ -24,6 +24,7 @@ public static class PostSeed {
                     Link = "https://github.com/oloughlinc",
                     Poster = "oloughlinc",
                     PostDate = DateTimeOffset.UtcNow,
+                    ReplyCount = 7,
                     Upsends = 99,
                 },
                 new Post {
@@ -34,6 +35,7 @@ public static class PostSeed {
                     Link = "",
                     Poster = "duck_lover",
                     PostDate = DateTimeOffset.UtcNow,
+                    ReplyCount = 4,
                     Upsends = 0,
                 },
                 new Post {
@@ -44,6 +46,7 @@ public static class PostSeed {
                     Link = "",
                     Poster = "JimBob23",
                     PostDate = DateTimeOffset.UtcNow,
+                    ReplyCount = 3,
                     Upsends = 0,
                 }
             );

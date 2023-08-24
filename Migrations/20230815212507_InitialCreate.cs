@@ -25,7 +25,7 @@ namespace RedditCloneASP.Migrations
                     Body = table.Column<string>(type: "text", nullable: true),
                     PostId = table.Column<long>(type: "bigint", nullable: false),
                     Path = table.Column<string>(type: "ltree", nullable: true),
-                    ParentPath = table.Column<string>(type: "text", nullable: true),
+                    ParentPath = table.Column<string>(type: "text", nullable: false),
                     Depth = table.Column<long>(type: "bigint", nullable: false),
                     PostDate = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     Upsends = table.Column<long>(type: "bigint", nullable: false)
@@ -47,6 +47,7 @@ namespace RedditCloneASP.Migrations
                     Link = table.Column<string>(type: "text", nullable: true),
                     Poster = table.Column<string>(type: "text", nullable: true),
                     PostDate = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    ReplyCount = table.Column<long>(type: "bigint", nullable: false),
                     Upsends = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>

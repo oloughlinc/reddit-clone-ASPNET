@@ -2,6 +2,7 @@ using RedditCloneASP.Models;
 
 namespace RedditCloneASP.Builders;
 
+// this static class is stateless. It is potentially used in multiple threads via Task.
 public static class CommentsBuilder {
 
     /// <summary>

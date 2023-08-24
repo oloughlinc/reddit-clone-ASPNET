@@ -18,5 +18,7 @@ public class Post {
 
     public DateTimeOffset PostDate { get; set; }
 
+    public long ReplyCount { get; set; }
+
     public long Upsends { get; set; }
 }

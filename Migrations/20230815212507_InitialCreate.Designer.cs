@@ -12,7 +12,7 @@ using RedditCloneASP.Models;
 namespace RedditCloneASP.Migrations
 {
     [DbContext(typeof(RedditContext))]
-    [Migration("20230813155629_InitialCreate")]
+    [Migration("20230815212507_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -41,6 +41,7 @@ namespace RedditCloneASP.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<string>("ParentPath")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Path")
@@ -82,6 +83,9 @@ namespace RedditCloneASP.Migrations
 
                     b.Property<string>("Poster")
                         .HasColumnType("text");
+
+                    b.Property<long>("ReplyCount")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Sub")
                         .HasColumnType("text");
