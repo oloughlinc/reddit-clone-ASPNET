@@ -4,6 +4,8 @@
 A front-to-back web application that mirrors the basic functionality of a comment-reply forum such as Reddit. This project is built as an exercise. The backend is built in C# on .NET 7 with Entity Framework and uses a PostgreSQL database server. 
 I chose the architecture before planning the rest of the project, with the idea that part of the challenge here is applying a given system to the needs of a single application.
 
+The front-end of this project is kept basic using static file hosting on a .NET server along with plain HTML / JavaScript. Bootstrap is used for simple and responsive CSS formatting.
+
 ### Database Considerations
 
 Reddit-style comments can be nested to an arbitrary level, with a single parent comment having a one-to-many relation to children comments, which can themselves be parents to further children. There are several techniques by which you can
