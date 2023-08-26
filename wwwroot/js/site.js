@@ -128,3 +128,13 @@ function _displayCommentsRecurse(item, depth) {
     })
 
 }
+
+function showLogin() {
+    const loginForm = document.getElementById("login");
+    loginForm.style.visibility = "visible"
+}
+
+function hideLogin() {
+    const loginForm = document.getElementById("login");
+    loginForm.style.visibility = "hidden"
+}
