@@ -12,7 +12,7 @@ using RedditCloneASP.Models;
 namespace RedditCloneASP.Migrations
 {
     [DbContext(typeof(RedditContext))]
-    [Migration("20230815212507_InitialCreate")]
+    [Migration("20230828161110_Initial-Create")]
     partial class InitialCreate
     {
         /// <inheritdoc />
