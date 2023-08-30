@@ -5,11 +5,16 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 using RedditCloneASP.Models;
 using RedditCloneASP.Auth;
+using NuGet.Common;
 
 namespace RedditCloneASP.Controllers {
 
     [Route("api/[controller]")]
     [ApiController]
+    [Produces("application/json")]
+    [ProducesResponseType(typeof(AuthToken), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(UnauthorizedResult), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(BadRequestResult), StatusCodes.Status400BadRequest)]
     public class AuthController : ControllerBase {
 
         private readonly UserManager<IdentityUser> userManager;

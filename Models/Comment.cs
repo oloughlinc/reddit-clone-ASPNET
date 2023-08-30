@@ -6,17 +6,17 @@ namespace RedditCloneASP.Models;
 
 
 /// <summary>
-/// Enum <c>CommentValues</c> holds different possible field types for a <c>Comment</c> data class.
-/// Currently only Upsends is implemented. This is at the moment only used for referencing a sorting comparator.
-/// More sorting functions can be easily added by including a new <c>CommentValue</c> type and an associated sorter class,
-/// making this design more extensible.
+/// <para>Enum <c>CommentValues</c> holds different possible field types for a <c>Comment</c> data class.<br/>
+/// Currently only Upsends is implemented. This is at the moment only used for referencing a sorting comparator. <br/>
+/// More sorting functions can be easily added by including a new <c>CommentValue</c> type and an associated sorter class,<br/>
+/// making this design more extensible.</para>
 /// </summary>
 public enum CommentValues {
     Upsends
 }
 
 /// <summary>
-/// Class <c>Comment<c> is an Entity Framework Data Access Object which allows us to easily map class members to a database.
+/// Class <c>Comment</c> is an Entity Framework Data Access Object which allows us to easily map class members to a database.
 /// </summary>
 public class Comment {
 
@@ -45,7 +45,7 @@ public class Comment {
 }
 
 /// <summary>
-/// Class <c>PublicComment<c> represents the fields and value that need to be served by the API to the general consumer.
+/// Class <c>PublicComment</c> represents the fields and value that need to be served by the API to the general consumer.
 /// This class hides data from the client that is necessary only for database retrieval and sorting.
 /// </summary>
 public class PublicComment {
@@ -74,6 +74,16 @@ public class PublicComment {
     public DateTimeOffset PostDate { get; set; }
 
     public long Upsends { get; set; }
+}
+
+/// <summary>
+/// Class <c>PostComment</c> represents the fields and values necessary for the client to provide for creating a new comment.
+/// </summary>
+public class PostComment {
+
+    public string? ReplyBody { get; set; }
+    public string? ParentID { get; set; }
+
 }
 
 public class CommentDTO {

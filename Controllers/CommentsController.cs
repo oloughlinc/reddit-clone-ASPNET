@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 using RedditCloneASP.Models;
 using RedditCloneASP.Builders;
+using Microsoft.AspNetCore.Authorization;
 
 namespace RedditCloneASP.Controllers
 {
@@ -23,7 +24,13 @@ namespace RedditCloneASP.Controllers
         }
 
         // GET: api/comments
+        /// <summary>
+        /// Get the entire comment tree for a specific post
+        /// </summary>
+        /// <param name="postId"></param>
+        /// <returns></returns>
         [HttpGet("{postId}")]
+        [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<CommentDTO>>> GetComments(int postId)
         {
           if (_context.Comments == null)
@@ -92,16 +99,31 @@ namespace RedditCloneASP.Controllers
         // POST: api/Comments
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Comment>> PostComment(Comment comment)
+        [Authorize(AuthenticationSchemes = "Bearer")]
+        [ProducesResponseType(typeof(NoContentResult), StatusCodes.Status401Unauthorized)]
+        public async Task<ActionResult<Comment>> PostComment(PostComment comment)
         {
+
+        /*  This POST endpoint requires a valid Bearer token from client in order to access.
+            Token validation is performed by the default authentication middleware in the pipeline,
+            as we defined in the program build.
+
+            If the provided token does not exist or else is improperly signed, the request is rejected
+            and 401 provided as response.
+
+            Beyond here the token has been accepted. We use the embedded username claim to ID the poster
+            for each new post. Since this is embedded in the signed token from server, the client cannot
+            manipulate this value and still access this endpoint (without knowing the server private key).
+        */
+
           if (_context.Comments == null)
           {
               return Problem("Entity set 'RedditContext.Comments'  is null.");
           }
-            _context.Comments.Add(comment);
-            await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetComment", new { id = comment.Id }, comment);
+          var uid = User.FindFirst("username")?.Value;
+          return Ok("Speak friend and enter. Your username is: " + uid);
+
         }
 
         // DELETE: api/Comments/5

@@ -6,11 +6,11 @@ namespace RedditCloneASP.Builders;
 public static class CommentsBuilder {
 
     /// <summary>
-    /// Static Method <c>BuildTreeFromComments</c> generates a nested array of transfer objects which each hold one
-    /// or more <c>Comments</c>. This is the preferred method of sending data to a view member, as these objects 
+    /// Static Method <c>BuildTreeFromComments</c> generates a nested array of transfer objects which each hold one<br/>
+    /// or more <c>Comments</c>. This is the preferred method of sending data to a view member, as these objects <br/>
     /// are easily iterated and displayed on client-side.
     /// </summary>
-    /// <param name="comments_list">A flat list of comment objects (List<Comment>), such as returned from a basic SQL query through EF.</param>
+    /// <param name="comments_list">A flat list of comment objects (List&lt;Comment&lt;), such as returned from a basic SQL query through EF.</param>
     /// <returns>A list of <c>CommentDTO</c> objects, each with their own nested list of replies.</returns>
     public static List<CommentDTO> BuildTreeFromComments(List<Comment> comments_list) {
         
@@ -42,11 +42,11 @@ public static class CommentsBuilder {
     }
 
     /// <summary>
-    /// Static Method <c>CommentDTO.Sort</c> sorts a nested array list using a defined comparator and built-in List<T>.Sort(Comparator).
-    /// Operates in average O(n log n) time for most cases.
+    /// Static Method <c>CommentDTO.Sort</c> sorts a nested array list using a defined comparator and built-in List&lt;T&lt;.Sort(Comparator).
+    /// Operates in average O(n log n) time for most cases.<br/>
     /// <see href="https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1.sort?view=net-7.0"/>
     /// </summary>
-    /// <param name="comment_tree">A populated list of CommentDTOs (List<CommentDTO>)</param>
+    /// <param name="comment_tree">A populated list of CommentDTOs (List&lt;CommentDTO&lt;)</param>
     /// <param name="value">A <c>CommentValues</c> enum representing the field by which to sort. <see cref="CommentValues"/></param>
     public static void Sort(List<CommentDTO> comment_tree, CommentValues value) {
         
