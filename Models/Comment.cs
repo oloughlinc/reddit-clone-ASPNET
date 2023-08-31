@@ -1,6 +1,8 @@
 
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace RedditCloneASP.Models;
 
@@ -24,6 +26,15 @@ public class Comment {
         this.ParentPath = "0";
     }
 
+    public Comment(long postId) : this() {
+        this.PostId = postId;
+        this.Path = postId.ToString();
+    }
+
+    // EF chooses property names 'Id' as default PK, no need to specify
+    // However, we want the database to track the next ID instead of the server
+    // This tag tells the context to use the database's autoincrement feature
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
 
     public string? Poster { get; set; }
@@ -81,8 +92,16 @@ public class PublicComment {
 /// </summary>
 public class PostComment {
 
+    [Required]
     public string? ReplyBody { get; set; }
-    public string? ParentID { get; set; }
+
+    [Required]
+    [Range(0, int.MaxValue)]
+    public int? ParentID { get; set; }
+
+    [Required]
+    [Range(1, int.MaxValue)]
+    public int? PostID { get; set; }
 
 }
 

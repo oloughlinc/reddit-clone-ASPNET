@@ -43,7 +43,7 @@ public class AuthToken {
 }
 
 public class SwashbuckleSecurityRequirementFilter : IOperationFilter {
-    
+
     public void Apply(OpenApiOperation operation, OperationFilterContext context) {
 
         var actionMetadata = context.ApiDescription.ActionDescriptor.EndpointMetadata;
@@ -51,13 +51,13 @@ public class SwashbuckleSecurityRequirementFilter : IOperationFilter {
         bool requiresAuth = actionMetadata.Any(item => item is AuthorizeAttribute);
         if (!requiresAuth) return;
 
-        //operation.Parameters = new List<OpenApiParameter>();
+        //if (operation.Parameters == null) operation.Parameters = new List<OpenApiParameter>();
         operation.Security = new List<OpenApiSecurityRequirement> {
             new OpenApiSecurityRequirement {
                 {
                     new OpenApiSecurityScheme {
                         Reference = new OpenApiReference {
-                            Id = "Bearer",
+                            Id = "JWT Bearer",
                             Type = ReferenceType.SecurityScheme
                         }
                     }, new List<string>()

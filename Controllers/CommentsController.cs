@@ -9,6 +9,8 @@ using Microsoft.EntityFrameworkCore;
 using RedditCloneASP.Models;
 using RedditCloneASP.Builders;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace RedditCloneASP.Controllers
 {
@@ -97,7 +99,11 @@ namespace RedditCloneASP.Controllers
         }
 
         // POST: api/Comments
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        /// <summary>
+        /// Add a new comment to a post or another comment
+        /// </summary>
+        /// <param name="comment"></param>
+        /// <returns></returns>
         [HttpPost]
         [Authorize(AuthenticationSchemes = "Bearer")]
         [ProducesResponseType(typeof(NoContentResult), StatusCodes.Status401Unauthorized)]
@@ -116,13 +122,154 @@ namespace RedditCloneASP.Controllers
             manipulate this value and still access this endpoint (without knowing the server private key).
         */
 
-          if (_context.Comments == null)
-          {
-              return Problem("Entity set 'RedditContext.Comments'  is null.");
-          }
+        // Perform basic content validation
+        if (_context.Comments == null)
+        {
+            return Problem("Entity set 'RedditContext.Comments'  is null.");
+        }
+        if (!ModelState.IsValid) return BadRequest();
+        if (User.FindFirst("username") == null) return BadRequest();
 
-          var uid = User.FindFirst("username")?.Value;
-          return Ok("Speak friend and enter. Your username is: " + uid);
+        /*  This query returns first the parent comment by id, and then,
+            the last of any children by path value. The last child is needed
+            in order to properly increment the path for this new comment.
+
+            The first query gets the path value of the id we want to reply to.
+            To this path we append the lquery syntax .*{1} which with the ~
+            operator will return all direct children at that path. From those
+            children the highest (last) final path value is returned.
+
+            The second query simply finds the parent post by Id.
+
+            Both are returned by the union.
+            If there are no children yet on the parent, the query returns the parent
+            comment only. In this case, we set the last child path to 0 on server later.
+        */
+
+        var parentId = comment.ParentID;
+        var postId = comment.PostID;
+
+        //TODO: Utilize stored procedures instead
+
+        FormattableString queryWithParent_old = $$""" 
+
+            SELECT * FROM 
+                (SELECT *
+                FROM "Comments"
+                WHERE "Path" ~
+                (SELECT "Path"::text::lquery || '.*{1}' 
+                    FROM "Comments" 
+                    WHERE "Id" = {{parentId}})::lquery
+                ORDER BY "Path" DESC
+                LIMIT 1) as last_child
+            
+            UNION
+
+            SELECT * 
+            FROM "Comments" 
+            WHERE "Id" = {{parentId}}
+
+            ORDER BY "Depth";
+
+            """;
+
+        FormattableString queryForLastChild = $$""" 
+
+            SELECT *
+            FROM "Comments"
+            WHERE "Path" ~
+            (SELECT "Path"::text::lquery || '.*{1}' 
+                FROM "Comments" 
+                WHERE "Id" = {{parentId}})::lquery
+            ORDER BY "Path" DESC
+            LIMIT 1;
+
+            """;
+
+        FormattableString queryForParent = $$""" 
+
+            SELECT * 
+            FROM "Comments" 
+            WHERE "Id" = {{parentId}};
+
+            """;
+        
+
+        string postIdQuery = postId.ToString() + ".*{1}";
+        FormattableString queryNoParent = $$""" 
+
+            SELECT *
+            FROM "Comments"
+            WHERE "Path" ~
+            {{postIdQuery}}::lquery 
+            ORDER BY "Path" DESC 
+            LIMIT 1;
+
+            """;
+
+        Comment parent;
+        Comment lastChild;
+        List<Comment> queryResult;
+        Comment newComment;
+
+         #pragma warning disable CS8602 // null state is checked during validation
+        string poster = User.FindFirst("username").Value;
+         #pragma warning restore CS8602
+
+        /*  PRE-INSERTION
+        
+            requires at least one database query in order to insert, where we find the parent
+            and the last child of that parent for inserting next and properly setting path
+            values.
+
+            This query is split into two because it makes the code more explicit, and we are 
+            not too worried about maximizing performance of write operations as they would be
+            far less common than read operations and can tf take a split second longer to complete.
+        */
+        try {
+
+            if (parentId == 0) { // this is a comment with no parent comment
+
+            queryResult = await _context.Comments.FromSql(queryNoParent).ToListAsync();
+            lastChild = queryResult.First();
+
+            newComment = CommentsBuilder.BuildNewComment(comment, poster, lastChild);
+
+        } else { // this is a comment that is a reply to another comment
+
+            queryResult = await _context.Comments.FromSql(queryForParent).ToListAsync();
+            parent = queryResult.First();
+
+            queryResult = await _context.Comments.FromSql(queryForLastChild).ToListAsync();
+            lastChild = queryResult.First();
+
+            newComment = CommentsBuilder.BuildNewComment(comment, poster, parent, lastChild);
+        }
+        } catch (OperationCanceledException) {
+            return Problem("Database operation was cancelled. Please try again later.");
+        } catch (Exception) {
+            return BadRequest(); // likely bad data from client
+        }
+
+        // return Created("Dummy created!", newComment);
+
+        /* INSERTION */
+
+        try {
+
+            // insert comment to database
+            _context.Comments.Add(newComment);
+            await _context.SaveChangesAsync();
+
+            // verify insertion, we do not have the id since the db sets this, so instead we custom search by path
+            queryResult = await _context.Comments.FromSql($"""SELECT * FROM "Comments" WHERE "Path" ~ {newComment.Path}::lquery;""").ToListAsync();
+            return Created("resp header: uri location", new PublicComment(queryResult.First()));
+
+        } catch (DbUpdateException) {
+            return Problem("Database operation was cancelled. Please try again later.");
+        } catch (Exception) {
+            return Problem();
+        }
 
         }
 
