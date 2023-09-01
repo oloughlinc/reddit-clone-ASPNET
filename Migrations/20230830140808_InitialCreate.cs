@@ -12,6 +12,7 @@ namespace RedditCloneASP.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+
             migrationBuilder.AlterDatabase()
                 .Annotation("Npgsql:PostgresExtension:ltree", ",,");
 
@@ -54,6 +55,8 @@ namespace RedditCloneASP.Migrations
                 {
                     table.PrimaryKey("PK_Posts", x => x.Id);
                 });
+
+                migrationBuilder.Sql("from file");
         }
 
         /// <inheritdoc />

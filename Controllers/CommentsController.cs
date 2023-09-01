@@ -40,27 +40,13 @@ namespace RedditCloneASP.Controllers
             return NotFound();
           }
 
-            /* 
-                This query takes advantage of the postgres 'ltree' module, which includes efficient methods for
-                traversing branching data structures related by a character string 'path'. 'ltree' can efficiently
-                find all ancestor / children for a given path using a binary search on a path index. 
-                
-                see https://www.postgresql.org/docs/current/ltree.html
-            */
-
-            string pathId = postId.ToString();
-            FormattableString query = $"""  
-                SELECT *
-                FROM "Comments"
-                WHERE {pathId}::ltree @> "Path"
-                ORDER BY "Depth", "Id";
-            """;
-
             // query for a flat list of the requested data as a list of comment objects
-            var comments_flat = await _context.Comments.FromSql(query).ToListAsync();
+            var comments_flat = await _context
+                            .GetAllCommentsForPost(postId.ToString())
+                            .ToListAsync();
 
             // build and return a nested list
-            return await Task.Run<List<CommentDTO>>(() => {
+            return await Task.Run(() => {
                 var comment_tree = CommentsBuilder.BuildTreeFromComments(comments_flat);
                 CommentsBuilder.Sort(comment_tree, CommentValues.Upsends);
                 return comment_tree;
@@ -130,83 +116,9 @@ namespace RedditCloneASP.Controllers
         if (!ModelState.IsValid) return BadRequest();
         if (User.FindFirst("username") == null) return BadRequest();
 
-        /*  This query returns first the parent comment by id, and then,
-            the last of any children by path value. The last child is needed
-            in order to properly increment the path for this new comment.
-
-            The first query gets the path value of the id we want to reply to.
-            To this path we append the lquery syntax .*{1} which with the ~
-            operator will return all direct children at that path. From those
-            children the highest (last) final path value is returned.
-
-            The second query simply finds the parent post by Id.
-
-            Both are returned by the union.
-            If there are no children yet on the parent, the query returns the parent
-            comment only. In this case, we set the last child path to 0 on server later.
-        */
-
-        var parentId = comment.ParentID;
+        // Initialize
+        int parentId = comment.ParentID ?? 0;
         var postId = comment.PostID;
-
-        //TODO: Utilize stored procedures instead
-
-        FormattableString queryWithParent_old = $$""" 
-
-            SELECT * FROM 
-                (SELECT *
-                FROM "Comments"
-                WHERE "Path" ~
-                (SELECT "Path"::text::lquery || '.*{1}' 
-                    FROM "Comments" 
-                    WHERE "Id" = {{parentId}})::lquery
-                ORDER BY "Path" DESC
-                LIMIT 1) as last_child
-            
-            UNION
-
-            SELECT * 
-            FROM "Comments" 
-            WHERE "Id" = {{parentId}}
-
-            ORDER BY "Depth";
-
-            """;
-
-        FormattableString queryForLastChild = $$""" 
-
-            SELECT *
-            FROM "Comments"
-            WHERE "Path" ~
-            (SELECT "Path"::text::lquery || '.*{1}' 
-                FROM "Comments" 
-                WHERE "Id" = {{parentId}})::lquery
-            ORDER BY "Path" DESC
-            LIMIT 1;
-
-            """;
-
-        FormattableString queryForParent = $$""" 
-
-            SELECT * 
-            FROM "Comments" 
-            WHERE "Id" = {{parentId}};
-
-            """;
-        
-
-        string postIdQuery = postId.ToString() + ".*{1}";
-        FormattableString queryNoParent = $$""" 
-
-            SELECT *
-            FROM "Comments"
-            WHERE "Path" ~
-            {{postIdQuery}}::lquery 
-            ORDER BY "Path" DESC 
-            LIMIT 1;
-
-            """;
-
         Comment parent;
         Comment lastChild;
         List<Comment> queryResult;
@@ -230,28 +142,23 @@ namespace RedditCloneASP.Controllers
 
             if (parentId == 0) { // this is a comment with no parent comment
 
-            queryResult = await _context.Comments.FromSql(queryNoParent).ToListAsync();
-            lastChild = queryResult.First();
-
+            lastChild = await _context.GetLastChildOfPost(postId.ToString() + ".*{1}").FirstAsync();
             newComment = CommentsBuilder.BuildNewComment(comment, poster, lastChild);
 
         } else { // this is a comment that is a reply to another comment
 
-            queryResult = await _context.Comments.FromSql(queryForParent).ToListAsync();
-            parent = queryResult.First();
-
-            queryResult = await _context.Comments.FromSql(queryForLastChild).ToListAsync();
-            lastChild = queryResult.First();
-
+            parent = await _context.GetParentById(parentId).FirstAsync();
+            lastChild = await _context.GetLastChildOfParent(parentId).FirstAsync();
             newComment = CommentsBuilder.BuildNewComment(comment, poster, parent, lastChild);
         }
+
         } catch (OperationCanceledException) {
             return Problem("Database operation was cancelled. Please try again later.");
         } catch (Exception) {
             return BadRequest(); // likely bad data from client
         }
 
-        // return Created("Dummy created!", newComment);
+        //return Created("Dummy created!", newComment);
 
         /* INSERTION */
 
