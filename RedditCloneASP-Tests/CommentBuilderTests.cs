@@ -46,6 +46,79 @@ public class CommentBuilderTests {
 
     }
 
+    [TestMethod]
+    public void CommentBuilder_BuildNewComment_WithParent_ReturnsComment_DataOK() {
+
+        // Arrange
+        PostComment newComment = new PostComment() {
+            ReplyBody = "This is a test comment",
+            ParentID = 1,
+            PostID = 1,
+        };
+        string username = "test_user";
+        Comment parent = GetTestComments()[0];
+        Comment lastChild = GetTestComments()[4];
+
+        Comment goodResult = new Comment {
+            Poster = "test_user",
+            Body = "This is a test comment",
+            PostId = 1,
+            Path = "1.1.3",
+            ParentPath = "0.1",
+            Depth = 1,
+            Upsends = 0,
+        };
+
+        // Act
+        var result = CommentsBuilder.BuildNewComment(newComment, username, parent, lastChild);
+
+        // Assert
+        Assert.IsInstanceOfType(result, typeof(Comment));
+        Assert.AreEqual(result.Poster, goodResult.Poster);
+        Assert.AreEqual(result.Body, goodResult.Body);
+        Assert.AreEqual(result.PostId, goodResult.PostId);
+        Assert.AreEqual(result.Path, goodResult.Path);
+        Assert.AreEqual(result.ParentPath, goodResult.ParentPath);
+        Assert.AreEqual(result.Depth, goodResult.Depth);
+        Assert.AreEqual(result.Upsends, goodResult.Upsends);
+    }
+
+    [TestMethod]
+    public void CommentBuilder_BuildNewComment_NoParent_ReturnsComment_DataOK() {
+
+        // Arrange
+        PostComment newComment = new PostComment() {
+            ReplyBody = "This is a test comment",
+            ParentID = 0,
+            PostID = 1,
+        };
+        string username = "test_user";
+        Comment lastChild = GetTestComments()[5];
+
+        Comment goodResult = new Comment {
+            Poster = "test_user",
+            Body = "This is a test comment",
+            PostId = 1,
+            Path = "1.4",
+            ParentPath = "0",
+            Depth = 0,
+            Upsends = 0,
+        };
+
+        // Act
+        var result = CommentsBuilder.BuildNewComment(newComment, username, lastChild);
+
+        // Assert
+        Assert.IsInstanceOfType(result, typeof(Comment));
+        Assert.AreEqual(result.Poster, goodResult.Poster);
+        Assert.AreEqual(result.Body, goodResult.Body);
+        Assert.AreEqual(result.PostId, goodResult.PostId);
+        Assert.AreEqual(result.Path, goodResult.Path);
+        Assert.AreEqual(result.ParentPath, goodResult.ParentPath);
+        Assert.AreEqual(result.Depth, goodResult.Depth);
+        Assert.AreEqual(result.Upsends, goodResult.Upsends);
+    }
+
     private List<Comment> GetTestComments() {
 
         return new List<Comment>() {

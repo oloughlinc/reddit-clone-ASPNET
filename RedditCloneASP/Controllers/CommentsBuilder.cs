@@ -106,7 +106,7 @@ public static class CommentsBuilder {
             PostId = lastChild.PostId,
             Path = lastChild.PostId + "." + (Char.GetNumericValue(lastChild.Path.Last()) + 1),
             ParentPath = "0",
-            Depth = 1,
+            Depth = 0,
             PostDate = DateTimeOffset.UtcNow,
             Upsends = 0,
             
