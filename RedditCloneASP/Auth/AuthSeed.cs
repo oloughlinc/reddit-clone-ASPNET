@@ -2,17 +2,18 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using System.Drawing.Text;
+using RedditCloneASP.Models;
 
 namespace RedditCloneASP.Auth;
 
 public static class AuthSeed {
 
-    public static async void Initialize(UserManager<IdentityUser> userManager) {
+    public static async void Initialize(UserManager<RedditIdentityUser> userManager) {
 
         if (userManager.Users.Count() >= 4) return;
 
         await userManager.CreateAsync(
-            new IdentityUser()
+            new RedditIdentityUser()
             {
                 UserName = "JimBob23",
                 Email = "mymeail1@email.com",
@@ -23,7 +24,7 @@ public static class AuthSeed {
         );
 
         await userManager.CreateAsync(
-            new IdentityUser()
+            new RedditIdentityUser()
             {
                 UserName = "MarySue99",
                 Email = "mymeail12@email.com",
@@ -34,7 +35,7 @@ public static class AuthSeed {
         );
 
         await userManager.CreateAsync(
-            new IdentityUser()
+            new RedditIdentityUser()
             {
                 UserName = "JohnSmith123",
                 Email = "mymeail123@email.com",
@@ -44,7 +45,7 @@ public static class AuthSeed {
             "SuperSecret123!"
         );
         await userManager.CreateAsync(
-            new IdentityUser()
+            new RedditIdentityUser()
             {
                 UserName = "oloughlinc",
                 Email = "craig.oloughlin@hotmail.com",

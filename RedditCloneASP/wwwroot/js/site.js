@@ -1,5 +1,6 @@
 const postUri = 'api/posts/'
 const commentUri = 'api/comments/'
+const authUri = 'api/auth/login'
 
 function getPosts() {
     fetch(postUri)
@@ -15,8 +16,8 @@ function _displayPosts(data) {
     data.forEach(item => {
 
         var posterDiv = document.createElement("div");
-        posterDiv.innerHTML += "u/";
-        posterDiv.innerHTML += item.poster;
+        posterDiv.innerHTML += "<b>u/" + item.poster + "</b>";
+        posterDiv.style.fontSize = "14px";
         body.appendChild(posterDiv);
 
         var div = document.createElement("div");
@@ -127,6 +128,37 @@ function _displayCommentsRecurse(item, depth) {
         
     })
 
+}
+
+async function onLoginClick() {
+
+    var username = document.getElementById("username").value;
+    var password = document.getElementById("password").value;
+
+    var response = await fetch(authUri, {
+
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            "username": username,
+            "password": password
+        })
+    });
+
+    console.log(response.status);
+
+    if (response.status != 200) {
+        console.log("Incorrect Credential Path");
+        return;
+    }
+
+    var data = await response.json();
+    console.log(data.token);
+
+    hideLogin();
 }
 
 function showLogin() {

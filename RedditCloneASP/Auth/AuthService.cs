@@ -8,38 +8,61 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authorization;
+using NuGet.Common;
+using System.Security.Cryptography;
 
 namespace RedditCloneASP.Auth;
 
 public static class AuthService {
 
-    public static AuthToken GenerateToken(IdentityUser user) {
+    public static AuthToken GenerateTokens(IdentityUser user) {
 
         if (user.UserName == null) return new AuthToken();
+
         var authClaims = new List<Claim> {
             new Claim("username", user.UserName),
         };
+
+        var refreshClaims = new List<Claim> {
+            new Claim("refresh", GetRandomKey()),
+        };
+
+        return new AuthToken() {
+            Token = GenerateToken(authClaims, 5),
+            Refresh = GenerateToken(refreshClaims, 1440),
+            TokenExpiry = DateTime.Now.AddMinutes(5).ToString()
+        };
+    }
+
+    private static string GenerateToken(List<Claim> claims, int expiry) {
+
 
         var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("MY_SUPER_SECRET_PRIVATE_KEY"));
 
         var token = new JwtSecurityToken(
             issuer: "https://localhost:7023",
             audience: "https://localhost:7023",
-            expires: DateTime.Now.AddMinutes(60),
-            claims: authClaims,
+            expires: DateTime.Now.AddMinutes(expiry),
+            claims: claims,
             signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
         );
 
-        return new AuthToken() {
-            Token = new JwtSecurityTokenHandler().WriteToken(token),
-            Expiry = token.ValidTo.ToString()
-        };
+        return new JwtSecurityTokenHandler().WriteToken(token);
     }
+
+    private static string GetRandomKey() {
+        
+        var randomNum = new Byte[64];
+        RandomNumberGenerator.Create().GetBytes(randomNum);
+        return Convert.ToBase64String(randomNum);
+    }
+
 }
 
 public class AuthToken {
     public string? Token {get; set;}
-    public string? Expiry {get; set;}
+    public string? Refresh { get; set; }
+    public string? TokenExpiry {get; set;}
 }
 
 public class SwashbuckleSecurityRequirementFilter : IOperationFilter {

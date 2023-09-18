@@ -17,9 +17,9 @@ namespace RedditCloneASP.Controllers {
     [ProducesResponseType(typeof(BadRequestResult), StatusCodes.Status400BadRequest)]
     public class AuthController : ControllerBase {
 
-        private readonly UserManager<IdentityUser> userManager;
+        private readonly UserManager<RedditIdentityUser> userManager;
 
-        public AuthController(UserManager<IdentityUser> userManager) {
+        public AuthController(UserManager<RedditIdentityUser> userManager) {
             this.userManager = userManager;
         }
 
@@ -34,7 +34,12 @@ namespace RedditCloneASP.Controllers {
             if (user == null) return Unauthorized();
 
             if (await userManager.CheckPasswordAsync(user, loginInfo.Password)) {
-                return Ok(AuthService.GenerateToken(user));
+
+                var tokens = AuthService.GenerateTokens(user);
+                user.RefreshToken = tokens.Refresh;
+                user.RefreshTokenExpiry = DateTime.Now.AddDays(1);
+
+                return Ok(tokens);
 
             } else {
                 return Unauthorized();

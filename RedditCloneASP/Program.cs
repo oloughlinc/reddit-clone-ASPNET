@@ -71,7 +71,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
     };
 });
 // Register the JWT Authorization Scheme
-builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+builder.Services.AddIdentity<RedditIdentityUser, IdentityRole>()
     .AddEntityFrameworkStores<AuthDbContext>()
     .AddDefaultTokenProviders();
 
@@ -94,7 +94,7 @@ using (var scope = app.Services.CreateScope()) {
 // this seeder accesses context indirectly through Identity UserManager's async functions
 // therefore, need an asynchronous scope to avoid context disposal
 AuthSeed.Initialize(app.Services.CreateAsyncScope()
-    .ServiceProvider.GetRequiredService<UserManager<IdentityUser>>());
+    .ServiceProvider.GetRequiredService<UserManager<RedditIdentityUser>>());
 
 // Configure the HTTP request pipeline.
 app.UseHttpsRedirection();

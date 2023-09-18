@@ -22,20 +22,30 @@
     <div class="container-fluid">
         <div class="row align-items-start">
 
-            <!-- https://getbootstrap.com/docs/4.0/utilities/display/#hiding-elements -->
-            <!-- MENU SIDEBAR -->
-            <div class="col d-none d-md-block bg-light">
-              <div class="d-flex flex-column align-items-center align-items-sm-start px-3 pt-2 text-white min-vh-100">
-                  <a href="/" class="d-flex align-items-center pb-3 mb-md-0 me-md-auto text-white text-decoration-none">
-                      <span class="fs-5 d-none d-sm-inline">Menu</span>
-                  </a>
-              </div>
+          <div class="col-2 d-none d-md-block bg-none border border-top-0 border-bottom-0 border-black border-opacity-10 mt-4">
+            <div class="d-flex flex-column justify-content-start text-black text-center min-vh-100">
+              <div class="p-2"><a href="/" class="text-black text-decoration-none fs-5 ">Home</a> </div>
+              <div class="p-2"><a href="/" class="text-black text-decoration-none fs-5">Popular</a> </div>
+              <hr>
+              <div class="p-2"><a href="/" class="text-black text-decoration-none fs-5">Topic 1</a> </div>
+              <div class="p-2"><a href="/" class="text-black text-decoration-none fs-5">Topic 2</a> </div>
+              <div class="p-2"><a href="/" class="text-black text-decoration-none fs-5">Topic 3</a> </div>
+              <div class="p-2"><a href="/" class="text-black text-decoration-none fs-5">Topic 4</a> </div>
+              <div class="p-2"><a href="/" class="text-black text-decoration-none fs-5">Topic 5</a> </div>
+              <hr>
+              <div class="p-2"><a href="/" class="text-black text-decoration-none fs-5">About</a> </div>
+              <div class="p-2"><a href="/" class="text-black text-decoration-none fs-5">Help</a> </div>
+
             </div>
+
+          </div>
           
           <!-- COMMENTS -->
-          <div class="col-6">
+          <div class="col-8">
+
             <script src="js/site.js" asp-append-version="true"></script>
 
+            <div class="ms-4 mt-4">
             <div id="post">
                 <script type="text/javascript">
                     getPost();
@@ -47,8 +57,10 @@
                 getComments();
             </script>
 
+            </div>
+
           </div>
-          <div class="col">
+          <div class="col-2">
             [Popular Subs Column]
           </div>
         </div>
