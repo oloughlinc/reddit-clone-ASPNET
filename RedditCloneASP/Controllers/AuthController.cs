@@ -36,15 +36,38 @@ namespace RedditCloneASP.Controllers {
             if (await userManager.CheckPasswordAsync(user, loginInfo.Password)) {
 
                 var tokens = AuthService.GenerateTokens(user);
-                user.RefreshToken = tokens.Refresh;
-                user.RefreshTokenExpiry = DateTime.Now.AddDays(1);
-
+                await StoreRefreshToken(user, tokens);
                 return Ok(tokens);
 
             } else {
                 return Unauthorized();
             }
         }
+
+        [HttpPost]
+        [Route("Refresh")]
+        public async Task<IActionResult> Refresh([FromBody] Login loginInfo) {
+
+            if (loginInfo?.RefreshToken == null) return BadRequest();
+            if (loginInfo?.Username == null) return BadRequest();
+
+            var user = await userManager.FindByNameAsync(loginInfo.Username);
+
+            if (user == null) return Unauthorized(); // username doesnt exist
+            if (user.RefreshToken != loginInfo.RefreshToken) return Unauthorized(); // refresh token is wrong/revoked
+            if (user.RefreshTokenExpiry <= DateTimeOffset.UtcNow) return Unauthorized(); // refresh token is expired
+
+            var tokens = AuthService.GenerateTokens(user);
+            await StoreRefreshToken(user, tokens);
+            return Ok(tokens);
+        }
+
+        private async Task StoreRefreshToken(RedditIdentityUser user, AuthToken tokens) {
+            user.RefreshToken = tokens.Refresh;
+            user.RefreshTokenExpiry = DateTimeOffset.UtcNow.AddDays(1);
+            await userManager.UpdateAsync(user);
+        }
+
 
     }
 }

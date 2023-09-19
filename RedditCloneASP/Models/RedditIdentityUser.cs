@@ -5,5 +5,5 @@ namespace RedditCloneASP.Models;
 public class RedditIdentityUser : IdentityUser {
 
     public string? RefreshToken { get; set; }
-    public DateTime? RefreshTokenExpiry { get; set; }
+    public DateTimeOffset? RefreshTokenExpiry { get; set; }
 }
