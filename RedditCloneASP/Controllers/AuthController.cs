@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using RedditCloneASP.Models;
 using RedditCloneASP.Auth;
 using NuGet.Common;
+using Azure.Core;
 
 namespace RedditCloneASP.Controllers {
 
@@ -37,6 +38,14 @@ namespace RedditCloneASP.Controllers {
 
                 var tokens = AuthService.GenerateTokens(user);
                 await StoreRefreshToken(user, tokens);
+
+                Response.Cookies.Append("refresh", tokens.Refresh ?? "", new CookieOptions() {
+                    HttpOnly = true,
+                    Secure = true,
+                    Path = "api/Auth",
+                    SameSite = SameSiteMode.None
+                });
+
                 return Ok(tokens);
 
             } else {
@@ -48,13 +57,17 @@ namespace RedditCloneASP.Controllers {
         [Route("Refresh")]
         public async Task<IActionResult> Refresh([FromBody] Login loginInfo) {
 
-            if (loginInfo?.RefreshToken == null) return BadRequest();
+            /* This endpoint is expecting refresh token as an http cookie in the request header */
+
+            //if (loginInfo?.RefreshToken == null) return BadRequest();
             if (loginInfo?.Username == null) return BadRequest();
 
+            var refreshToken = Request.Cookies["refresh"] ?? "";
             var user = await userManager.FindByNameAsync(loginInfo.Username);
 
             if (user == null) return Unauthorized(); // username doesnt exist
-            if (user.RefreshToken != loginInfo.RefreshToken) return Unauthorized(); // refresh token is wrong/revoked
+            //if (user.RefreshToken != loginInfo.RefreshToken) return Unauthorized(); // refresh token is wrong/revoked
+            if (user.RefreshToken != refreshToken) return Unauthorized(); // refresh token is wrong/revoked
             if (user.RefreshTokenExpiry <= DateTimeOffset.UtcNow) return Unauthorized(); // refresh token is expired
 
             var tokens = AuthService.GenerateTokens(user);

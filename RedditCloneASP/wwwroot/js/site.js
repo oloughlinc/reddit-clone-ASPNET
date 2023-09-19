@@ -2,6 +2,8 @@ const postUri = 'api/posts/'
 const commentUri = 'api/comments/'
 const authUri = 'api/auth/login'
 
+var authToken = null;
+
 function getPosts() {
     fetch(postUri)
         .then(response => response.json())
@@ -130,11 +132,45 @@ function _displayCommentsRecurse(item, depth) {
 
 }
 
+async function authenticate(username, password, endpoint) {
+
+    console.log(username);
+    console.log(password);
+
+    var response = await fetch(endpoint, {
+
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            "username": username,
+            "password": password
+        })
+    });
+
+    console.log(response.status);
+
+    if (response.status != 200) {
+        console.log("Incorrect Credential Path");
+        return;
+    }
+
+    var data = await response.json();
+    console.log(data.token);
+    console.log(data.refresh);
+
+    // store token in-memory
+    authToken = data.token;
+}
+
 async function onLoginClick() {
 
     var username = document.getElementById("username").value;
     var password = document.getElementById("password").value;
 
+    /*
     var response = await fetch(authUri, {
 
         method: 'POST',
@@ -157,7 +193,11 @@ async function onLoginClick() {
 
     var data = await response.json();
     console.log(data.token);
+    console.log(data.refresh);
+    */
+    authenticate(username, password, authUri);
 
+    // change this to a redirect to rebuild site as log-in user
     hideLogin();
 }
 
@@ -169,4 +209,11 @@ function showLogin() {
 function hideLogin() {
     const loginForm = document.getElementById("login");
     loginForm.style.visibility = "hidden"
+}
+
+function refresh() {
+    const refreshUri = "api/auth/refresh";
+    var username = "oloughlinc";
+    authenticate(username, "heehee", refreshUri);
+
 }
