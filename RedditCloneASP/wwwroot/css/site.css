@@ -39,3 +39,8 @@
     width: 100%;
 }
 
+.login-form .invalid-text {
+    color: red;
+    visibility: hidden;
+}
+

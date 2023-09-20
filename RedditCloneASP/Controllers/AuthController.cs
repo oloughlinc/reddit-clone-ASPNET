@@ -59,20 +59,51 @@ namespace RedditCloneASP.Controllers {
 
             /* This endpoint is expecting refresh token as an http cookie in the request header */
 
-            //if (loginInfo?.RefreshToken == null) return BadRequest();
             if (loginInfo?.Username == null) return BadRequest();
 
             var refreshToken = Request.Cookies["refresh"] ?? "";
             var user = await userManager.FindByNameAsync(loginInfo.Username);
 
             if (user == null) return Unauthorized(); // username doesnt exist
-            //if (user.RefreshToken != loginInfo.RefreshToken) return Unauthorized(); // refresh token is wrong/revoked
+
             if (user.RefreshToken != refreshToken) return Unauthorized(); // refresh token is wrong/revoked
             if (user.RefreshTokenExpiry <= DateTimeOffset.UtcNow) return Unauthorized(); // refresh token is expired
 
             var tokens = AuthService.GenerateTokens(user);
+
+            Response.Cookies.Append("refresh", tokens.Refresh ?? "", new CookieOptions() {
+                    HttpOnly = true,
+                    Secure = true,
+                    Path = "api/Auth",
+                    SameSite = SameSiteMode.None
+            });
+
             await StoreRefreshToken(user, tokens);
             return Ok(tokens);
+        }
+
+        [HttpPost]
+        [Route("Logout")]
+        public async Task<IActionResult> Logout([FromBody] Login loginInfo) {
+
+            var username = loginInfo.Username;
+            if (username == null) return BadRequest();
+
+            var refreshToken = Request.Cookies["refresh"];
+            if (refreshToken == null) return BadRequest();
+
+            var user = await userManager.FindByNameAsync(username);
+            if (user == null) return Unauthorized();
+
+            user.RefreshTokenExpiry = DateTimeOffset.MinValue; // revoked
+            await userManager.UpdateAsync(user);
+
+            Response.Cookies.Append("refresh", "", new CookieOptions() {
+                Path = "api/Auth",
+                Expires = DateTimeOffset.MinValue
+            });
+
+            return Ok();
         }
 
         private async Task StoreRefreshToken(RedditIdentityUser user, AuthToken tokens) {

@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="css/site.css" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
 </head>
-<body>
+<body onload="onIndexLoad()">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
     <script src="js/site.js" asp-append-version="true"></script>
 
@@ -18,27 +18,32 @@
           <button type="reset" class="btn-close" onclick="hideLogin()"></button>
           <div class="form-group">
             <label for="username">Username</label>
-            <input type="email" class="form-control" id="username" placeholder="Enter Username">
+            <input required type="email" class="form-control" id="username" placeholder="Enter Username">
           </div>
           <div class="form-group">
             <label for="password">Password</label>
-            <input type="password" class="form-control" id="password" placeholder="Password">
+            <input required type="password" class="form-control" id="password" placeholder="Password">
           </div>
           <div class="form-group">
-            <button type="submit" class="btn btn-primary" onclick="onLoginClick()">Submit</button>
+            <button type="button" class="btn btn-primary" onclick="onLoginClick()">Submit</button>
+          </div>
+          <div class="form-group invalid-text" id="login-invalid">
+            Invalid Credentials!
           </div>
         </form>
         </div>
       </div>
     </div>
 
-    
     <nav class="navbar bg-body-tertiary">
         <div class="container-fluid">
           <a class="navbar-brand" href="/wwwroot/index.html">Reddit Clone ASP.NET</a>
           <div class="d-flex">
-            <button class="btn btn-outline-primary" type="submit" onclick="showLogin()">Login</button>
-            <button class="btn btn-outline-primary" type="submit" onclick="refresh()">Refresh</button>
+            <div class="nav-item active" style="display: none;" id="username-display">
+              u/oloughlinc
+            </div>
+            <button id="btn-login" class="btn btn-outline-primary" type="submit" onclick="showLogin()">Login</button>
+            <button id="btn-logout" class="btn btn-outline-primary" type="submit" onclick="onLogoutClick()" style="display: none;">Logout</button>
           </div>
         </div>
     </nav>
