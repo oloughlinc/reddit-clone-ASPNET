@@ -82,16 +82,37 @@
                     getPost();
                 </script>
             </div>
-            <div style="margin-bottom: 20px; display:none;" id="new-post-form">            
-              <button>new post</button>
-              <textarea></textarea>
-              <button>post!</button>
-            </div>
+
+            <form style="display:none;" class="post-form" id="new-post-form">  
+              <div>
+                <textarea id="new-comment"></textarea>
+              </div>          
+              <div>
+                <button class="btn btn-primary post-button" type="button" onclick="onPostCommentClick()">post!</button>
+              </div>
+              
+            </form>
             
             <div id="body"></div>
             <script type="text/javascript">
                 getComments();
             </script>
+
+            <template id="comment">
+              <div class="comment-container" id="comment-container">
+                <div class="poster" id="poster"></div>
+                <div class="body" id="body"></div>
+                <div id="upsends-reply-container">
+                  <div class="upsends" id="upsends"></div>
+                  <button class="btn reply" id="reply" style="font-size: 12px; display:none;"><b>Reply</b></button>
+                </div>
+                <form style="display:none;">
+                  <textarea></textarea>
+                  <button type="button" id="reply-post-btn">Post!</button>
+                </form>
+                <hr>
+              </div>
+            </template>
 
             </div>
 

@@ -149,13 +149,15 @@ namespace RedditCloneASP.Controllers
         } else { // this is a comment that is a reply to another comment
 
             parent = await _context.GetParentById(parentId).FirstAsync();
-            lastChild = await _context.GetLastChildOfParent(parentId).FirstAsync();
+            var result = await _context.GetLastChildOfParent(parentId).ToListAsync();
+            lastChild = result.Count > 0 ? result[0] : new Comment() {Path = "0"}; // case: parent has no children
             newComment = CommentsBuilder.BuildNewComment(comment, poster, parent, lastChild);
         }
 
         } catch (OperationCanceledException) {
             return Problem("Database operation was cancelled. Please try again later.");
-        } catch (Exception) {
+        } catch (Exception e) {
+            Console.WriteLine(e);
             return BadRequest(); // likely bad data from client
         }
 

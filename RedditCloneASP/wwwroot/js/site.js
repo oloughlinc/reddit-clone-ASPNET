@@ -5,18 +5,21 @@ const refreshUri = 'api/auth/refresh'
 
 var authToken = null;
 
+var currPost = null;
+
+function loggedIn() {
+    var username = localStorage.getItem("username");
+    if (username != null && username != "") {
+        return true;
+    }
+    return false;
+}
+
 async function onIndexLoad() {
 
-    var loggedIn = false;
-    var username = localStorage.getItem("username");
-
-    if (username != null && username != "") {
-        loggedIn = true;
-    }
-
-    if (loggedIn) {
+    if (loggedIn()) {
         var userDisplay = document.getElementById("username-display");
-        userDisplay.innerHTML = "Welcome u/" + username;
+        userDisplay.innerHTML = "Welcome u/" + localStorage.getItem("username");
         userDisplay.style.removeProperty("display");
         document.getElementById("btn-logout").style.removeProperty("display");
         document.getElementById("btn-login").style.display = "none";
@@ -61,7 +64,7 @@ async function onCommentLoad() {
 
     // silent sign in / receive new token on page reload
     await refreshAsync(localStorage.getItem("username"), "", refreshUri);
-    console.log("auth token is:: " + authToken);
+    //console.log("auth token is:: " + authToken);
 
 }
 
@@ -114,6 +117,8 @@ function getPost() {
 // To be replaced with templating once one is made.
 function _displayPost(item) {
     const body = document.getElementById('post');
+    
+    currPost = item.id;
 
     var posterDiv = document.createElement("div");
     posterDiv.innerHTML += "u/";
@@ -155,8 +160,43 @@ function _displayComments(data) {
     _displayCommentsRecurse(data, depth);
 }
 
-// To be replaced with templating once one is made.
+
+// templating
 function _displayCommentsRecurse(item, depth) {
+
+    item.forEach((item) => {
+        
+        var template = document.querySelector("#comment");
+        var comment = template.content.cloneNode(true);
+    
+        var thisMargin = 15 * depth;
+        comment.querySelector("#comment-container").style.marginLeft = thisMargin + "px";
+    
+        comment.querySelector("#poster").innerHTML += "<b>u/" + item.comment.poster + "</b>";
+        comment.querySelector("#body").innerHTML += item.comment.body;
+        
+        var container = comment.querySelector("#upsends-reply-container");
+            container.querySelector("#upsends").innerHTML += "<i>Upsends: " + item.comment.upsends + "</i>";
+            if (loggedIn()) container.querySelector("#reply").style.removeProperty("display");
+            container.querySelector("#reply").onclick = () => { onReplyClick(item.comment.id); };
+
+
+        comment.querySelectorAll("form")[0].setAttribute("id", "reply" + item.comment.id);
+        comment.querySelectorAll("textarea")[0].setAttribute("id", "reply-text" + item.comment.id);
+        comment.querySelector("#reply-post-btn").onclick = () => { testFunction(item.comment.id); };
+        
+        body.appendChild(comment);
+    
+        if (item.replies) {
+            depth++;
+            _displayCommentsRecurse(item.replies, depth);
+            depth--;
+        }
+    });
+}
+
+// no templating
+function _displayCommentsRecurse1(item, depth) {
 
     item.forEach(item => {
 
@@ -175,6 +215,12 @@ function _displayCommentsRecurse(item, depth) {
         upsends.innerHTML += "<i>Upsends: " + item.comment.upsends + "</i>";
         commentParentDiv.appendChild(upsends);
 
+        var replyBtn = document.createElement("button");
+        replyBtn.innerHTML = "<b>Reply</b>";
+        replyBtn.onclick = function() { onReplyClick(item.comment.id); };
+        replyBtn.style.fontSize = "12px";
+        commentParentDiv.appendChild(replyBtn);
+
         var hr = document.createElement("hr");
         commentParentDiv.appendChild(hr);
 
@@ -183,13 +229,14 @@ function _displayCommentsRecurse(item, depth) {
 
         body.appendChild(commentParentDiv);
 
+        // visual nesting handled by incrementing a depth scalar before the next recursive call
         if (item.replies) {
             depth++;
             _displayCommentsRecurse(item.replies, depth);
             depth--;
         }
         
-    })
+    });
 
 }
 
@@ -255,7 +302,8 @@ async function onLoginClick() {
     var authenticated = await authenticate(username, password, authUri);
 
     if (authenticated) {
-        location.href = "/";
+        //location.href = "/";
+        location.reload();
         return;
     }
     document.getElementById("login-invalid").style.visibility = "visible";
@@ -287,6 +335,51 @@ async function onLogoutClick() {
     location.href = "/";
 }
 
+async function onPostCommentClick() {
+    var comment = document.getElementById("new-comment").value;
+    if (await postComment(0, comment)) {
+        comment.value = "";
+        location.href = "/comments.html?" + currPost;
+    }
+}
+
+async function onReplyClick(id) {
+    console.log("my id is: " + id);
+    document.getElementById("reply" + id).style.removeProperty("display");
+}
+
+async function postComment(parentID, comment) {
+
+    console.log(parentID);
+    console.log(comment);
+    console.log(currPost);
+
+    await refreshAsync();
+
+    var response = await fetch("api/comments", {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer " + authToken
+        },
+        body: JSON.stringify({
+            "replyBody": comment,
+            "parentID": parentID,
+            "postID": currPost
+        })
+    });
+
+    console.log(response.status);
+
+    if (response.status != 201) {
+        console.log("New post failed..");
+        return false;
+    }
+    return true;
+
+}
+
 function showLogin() {
     const loginForm = document.getElementById("login");
     loginForm.style.visibility = "visible"
@@ -304,6 +397,21 @@ async function refreshAsync() {
     const refreshUri = "api/auth/refresh";
     var username = localStorage.getItem("username");
     if (username == null || username == "") return;
-    await authenticate(username, "", refreshUri);
+    var result = await authenticate(username, "", refreshUri);
+    if (!result) {
 
+        // refresh failed..
+        // prompt user to log back in
+        // the most likely cause of this is expired refresh cookie
+        onLogoutClick();
+    }
+
+}
+
+async function testFunction(id) {
+    var comment = document.getElementById("reply-text" + id).value;     
+    if (await postComment(id, comment)) {
+        comment.value = "";
+        location.href = "/comments.html?" + currPost;
+    }
 }

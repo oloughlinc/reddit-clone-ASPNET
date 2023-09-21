@@ -44,3 +44,23 @@
     visibility: hidden;
 }
 
+.post-form {
+    width:450px;
+    max-width: 100%;
+    margin-bottom: 60px;
+}
+
+form textarea {
+    height: 150px;
+    width: 100%;
+}
+
+form div {
+    margin-bottom: 10px;
+}
+
+.post-button {
+    float: right;
+    width: 100px;
+}
+
