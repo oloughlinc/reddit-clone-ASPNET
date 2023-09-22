@@ -1,10 +1,9 @@
 # Reddit-Clone-ASPNET
-**[This project is currently in progress]**
 
 A front-to-back web application that mirrors the basic functionality of a comment-reply forum such as Reddit. This project is built as an exercise. The backend is built in C# on .NET 7 with Entity Framework and uses a PostgreSQL database server. 
 I chose the architecture before planning the rest of the project, with the idea that part of the challenge here is applying a given system to the needs of a single application.
 
-The front-end of this project is kept basic using static file hosting on a .NET server along with plain HTML / JavaScript. Bootstrap is used for simple and responsive CSS formatting.
+The front-end of this project is kept basic using static file hosting on a .NET server along with plain HTML / JavaScript. Bootstrap is used for simple and responsive CSS formatting and styling.
 
 ### Database Considerations
 
@@ -23,3 +22,17 @@ then parent id, which means that as the nested arrays are populated they remain 
 
 A nested dictionary can instead be used to obtain linear time complexity, however sorting will become problematic later as each nested dictionary will first need to be converted to an array while keeping the nested structure intact. The 
 performance increase is likely not worth the extra code. 
+
+### Authentication
+
+A basic model is used for a user with each user possessing a username, email address, and password. Microsoft Identity is used to facilitate storage of user information and passwords on the database. Although Identity is geared towards MVC with integration of authentication into the creted View, it contains several helpful features specifically for the backend, including automated password hashing/salting, table management, and automated credential verification in the middleware. Identity also by default enforces password complexity for us.
+
+### Authorization
+
+The Auth API sends a JWT token response that authorizes the requesting client to perform certain actions such as posting new comments or replies. The auth implementation was custom built as an exercise but follows Auth0 guidelines by providing both a short-lived authorization token and a longer-life refresh token that can be used to obtain new authorization tokens. The web client is built in a way to closely guard the JWT authorization token value, as anyone with this token information is authorized as the user. The token is kept in browser-memory and is inaccessible across scripts. This necessitates a refresh of the token on every page reload. The refresh token is stored as an HttpOnly cookie. This is slightly more public but the value is still not obtainable by client JavaScript. The refresh token is single use and a new refresh token is issued with each refresh request. The valid refresh and expiry is stored in the Identity table by extending the basic authentication context.
+
+### Testing
+
+A seperate MSTest project is included with unit tests for application logic on the server. For integration tests of the web api, we use a test database server which includes the same stored procedures as the production database. This allows us to easily test api functions without having to implement a new in-memory mock and duplicate procedures. This also allows us to explicitly test ltree functions for the database retrieval and storage.
+
+
